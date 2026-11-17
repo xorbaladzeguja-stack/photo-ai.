@@ -21,6 +21,49 @@ jobs:
       - run: npm run build
       - run: npx cap add android || true
       - run: |
+          python3 - << 'PY'
+          import glob, re
+
+          for path in glob.glob("android/app/src/main/res/values*/styles.xml"):
+              with open(path, "r") as f:
+                  s = f.read()
+              if "windowOptOutEdgeToEdgeEnforcement" not in s:
+                  s = s.replace(
+                      "</style>",
+                      '    <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>\n'
+                      '    <item name="android:statusBarColor">#0B0D14</item>\n'
+                      '    <item name="android:windowLightStatusBar">false</item>\n'
+                      '    <item name="android:fitsSystemWindows">true</item>\n'
+                      '    </style>'
+                  )
+                  with open(path, "w") as f:
+                      f.write(s)
+
+          for path in glob.glob("android/app/src/main/java/**/MainActivity.java", recursive=True):
+              with open(path, "r") as f:
+                  java = f.read()
+              m = re.search(r"package\s+([\w.]+);", java)
+              pkg = m.group(1) if m else "com.photoai.app"
+              new_java = f"""package {pkg};
+
+          import android.graphics.Color;
+          import android.os.Bundle;
+          import androidx.core.view.WindowCompat;
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {{
+              @Override
+              public void onCreate(Bundle savedInstanceState) {{
+                  super.onCreate(savedInstanceState);
+                  WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
+                  getWindow().setStatusBarColor(Color.parseColor("#0B0D14"));
+              }}
+          }}
+          """
+              with open(path, "w") as f:
+                  f.write(new_java)
+          PY
+      - run: |
           if [ -f "assets/raw_logo" ]; then
             sudo apt-get update -qq && sudo apt-get install -y -qq python3-pil
             python3 -c "from PIL import Image; Image.open('assets/raw_logo').convert('RGBA').resize((1024, 1024)).save('assets/icon.png', 'PNG')"
