@@ -12,16 +12,26 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: '20'
       - uses: actions/setup-java@v4
         with:
-          distribution: "temurin"
-          java-version: "21"
+          distribution: 'temurin'
+          java-version: '21'
       - run: npm install --legacy-peer-deps
       - run: npm run build
       - run: npx cap add android || true
+      - run: |
+          if [ -f "assets/raw_logo" ]; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq python3-pil
+            python3 -c "from PIL import Image; Image.open('assets/raw_logo').convert('RGBA').resize((1024, 1024)).save('assets/icon.png', 'PNG')"
+            rm -f assets/raw_logo
+            npx -y @capacitor/assets generate --android
+          fi
       - run: npx cap sync android
-      - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+      - run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
         with:
           name: photo-ai-apk
