@@ -1,0 +1,6 @@
+{
+  "name": "PHOTO AI",
+  "description": "თანამედროვე AI ფოტო რედაქტორი მობილურზე — ფოტოს ხარისხის გაუმჯობესება, AI პორტრეტები, სტილები და ფონის შეცვლა.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
